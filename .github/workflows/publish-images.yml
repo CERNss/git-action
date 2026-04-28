@@ -1,0 +1,61 @@
+name: Publish CI/CD Images
+
+on:
+  push:
+    tags:
+      - "**"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to publish.
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DOCKER_BUILD_PULL: "true"
+      IMAGE_REPO_PREFIX: ${{ vars.IMAGE_REPO_PREFIX || secrets.IMAGE_REPO_PREFIX }}
+      OCI_NAMESPACE: ${{ vars.OCI_NAMESPACE || secrets.OCI_NAMESPACE }}
+      OCI_PASSWORD: ${{ secrets.OCI_PASSWORD }}
+      OCI_REGISTRY_URL: ${{ vars.OCI_REGISTRY_URL || secrets.OCI_REGISTRY_URL }}
+      OCI_USERNAME: ${{ vars.OCI_USERNAME || secrets.OCI_USERNAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Resolve image tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_tag="${GITHUB_REF_NAME}"
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            image_tag="${{ github.event.inputs.image_tag }}"
+          fi
+
+          echo "IMAGE_TAG=${image_tag}" >> "${GITHUB_ENV}"
+
+      - name: Validate publish configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${OCI_USERNAME:-}" || -z "${OCI_PASSWORD:-}" ]]; then
+            echo "OCI_USERNAME and OCI_PASSWORD must be configured before publishing." >&2
+            exit 1
+          fi
+
+      - name: Build and push images
+        shell: bash
+        run: ./cicd/scripts/publish-all.sh "${IMAGE_TAG}"

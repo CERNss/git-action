@@ -1,0 +1,19 @@
+{
+  "name": "cicd-typescript-template",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.8.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "validate": "echo \"replace with your project validate script\"",
+    "build": "echo \"replace with your project build script\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
