@@ -11,10 +11,13 @@ image_type="$2"
 image_tag="${3:-latest}"
 push_image="${PUSH_IMAGE:-false}"
 extra_image_tags_raw="${EXTRA_IMAGE_TAGS:-}"
+plain_extra_image_tags_raw="${EXTRA_IMAGE_TAGS_PLAIN:-}"
+image_tag_suffix="${IMAGE_TAG_SUFFIX:-}"
 oci_registry_url="${OCI_REGISTRY_URL:-docker.io}"
 oci_namespace="${OCI_NAMESPACE:-${OCI_USERNAME:-}}"
 target_platform="${TARGET_PLATFORM:-}"
 target_platforms_raw="${TARGET_PLATFORMS:-}"
+base_image_override="${BASE_IMAGE:-}"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace_root="$(cd "${repo_root}/.." && pwd)"
@@ -84,6 +87,12 @@ image_repo_root="$(resolve_image_repo_root)"
 
 resolve_image_name() {
   local requested_tag="$1"
+  local apply_suffix="${2:-true}"
+  local resolved_tag="${requested_tag}"
+
+  if [[ "${apply_suffix}" == "true" && -n "${image_tag_suffix}" ]]; then
+    resolved_tag="${requested_tag}${image_tag_suffix}"
+  fi
 
   if [[ "${push_image}" == "true" && -z "${IMAGE_REPO_PREFIX:-}" ]] && \
      is_docker_hub_registry "${oci_registry_url}"; then
@@ -92,7 +101,7 @@ resolve_image_name() {
       "${repository_name}" \
       "${environment_name}" \
       "${image_type}" \
-      "${requested_tag}"
+      "${resolved_tag}"
     return
   fi
 
@@ -100,15 +109,21 @@ resolve_image_name() {
     "${image_repo_root}" \
     "${environment_name}" \
     "${image_type}" \
-    "${requested_tag}"
+    "${resolved_tag}"
 }
 
 image_name="${IMAGE_NAME_OVERRIDE:-$(resolve_image_name "${image_tag}")}"
 extra_image_names=()
+plain_extra_image_names=()
 image_names=("${image_name}")
 
 if [[ -n "${IMAGE_NAME_OVERRIDE:-}" && -n "${extra_image_tags_raw}" ]]; then
   echo "IMAGE_NAME_OVERRIDE cannot be combined with EXTRA_IMAGE_TAGS" >&2
+  exit 1
+fi
+
+if [[ -n "${IMAGE_NAME_OVERRIDE:-}" && -n "${plain_extra_image_tags_raw}" ]]; then
+  echo "IMAGE_NAME_OVERRIDE cannot be combined with EXTRA_IMAGE_TAGS_PLAIN" >&2
   exit 1
 fi
 
@@ -128,6 +143,27 @@ if [[ -n "${extra_image_tags_raw}" ]]; then
   done
 fi
 
+if [[ -n "${plain_extra_image_tags_raw}" ]]; then
+  IFS=',' read -r -a plain_extra_image_tags <<< "${plain_extra_image_tags_raw}"
+
+  for plain_extra_tag in "${plain_extra_image_tags[@]-}"; do
+    plain_extra_tag="$(printf '%s' "${plain_extra_tag}" | xargs)"
+
+    if [[ -z "${plain_extra_tag}" ]]; then
+      continue
+    fi
+
+    plain_extra_image_name="$(resolve_image_name "${plain_extra_tag}" false)"
+
+    if [[ "${plain_extra_image_name}" == "${image_name}" ]]; then
+      continue
+    fi
+
+    plain_extra_image_names+=("${plain_extra_image_name}")
+    image_names+=("${plain_extra_image_name}")
+  done
+fi
+
 target_platforms="$(trim_spaces "${target_platforms_raw}")"
 use_buildx="false"
 
@@ -139,6 +175,10 @@ docker_args=()
 
 if [[ "${DOCKER_BUILD_PULL:-true}" == "true" ]]; then
   docker_args+=(--pull)
+fi
+
+if [[ -n "${base_image_override}" ]]; then
+  docker_args+=(--build-arg "BASE_IMAGE=${base_image_override}")
 fi
 
 if [[ -n "${target_platform}" && "${use_buildx}" != "true" ]]; then
@@ -204,6 +244,15 @@ for extra_image_name in "${extra_image_names[@]-}"; do
   echo "tagged image: ${extra_image_name}"
 done
 
+for plain_extra_image_name in "${plain_extra_image_names[@]-}"; do
+  if [[ -z "${plain_extra_image_name}" ]]; then
+    continue
+  fi
+
+  docker tag "${image_name}" "${plain_extra_image_name}"
+  echo "tagged image: ${plain_extra_image_name}"
+done
+
 if [[ "${push_image}" == "true" ]]; then
   docker push "${image_name}"
   echo "pushed image: ${image_name}"
@@ -215,5 +264,14 @@ if [[ "${push_image}" == "true" ]]; then
 
     docker push "${extra_image_name}"
     echo "pushed image: ${extra_image_name}"
+  done
+
+  for plain_extra_image_name in "${plain_extra_image_names[@]-}"; do
+    if [[ -z "${plain_extra_image_name}" ]]; then
+      continue
+    fi
+
+    docker push "${plain_extra_image_name}"
+    echo "pushed image: ${plain_extra_image_name}"
   done
 fi

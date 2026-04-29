@@ -52,6 +52,7 @@ Optional environment variables:
 - `IMAGE_REPO_PREFIX`: full image repository root override. Local build defaults to `local/<repository>`, publish mode derives it from OCI settings.
 - `IMAGE_REPOSITORY_NAME`: repository name segment, default is the current GitHub repository name or local directory name.
 - `IMAGE_NAME_OVERRIDE`: full image name override
+- `BASE_IMAGE`: optional exact base image override
 - `DOCKER_BUILD_PULL`: whether to pull the latest base image before build, default `true`
 - `TARGET_PLATFORM`: optional single-platform Docker build target, for example `linux/amd64`
 - `TARGET_PLATFORMS`: optional buildx multi-platform target list, for example `linux/amd64,linux/arm64`
@@ -132,6 +133,13 @@ Platform behavior:
 - `TARGET_PLATFORM=linux/amd64` uses classic single-platform `docker build`
 - `TARGET_PLATFORMS=linux/amd64,linux/arm64` uses `docker buildx build`
 - multi-platform `TARGET_PLATFORMS` requires `PUSH_IMAGE=true` because buildx can only `--load` single-platform results into the local Docker image store
+
+Go and Python version behavior:
+
+- `golang` publishes `go1.21`, `go1.22`, and `go1.23` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/golang/versions.conf:1)
+- `python` publishes `py3.10`, `py3.11`, and `py3.12` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/python/versions.conf:1)
+- default variants also keep the plain tags, so `v1.0.0` and `latest` still point to Go `1.22` and Python `3.12`
+- non-default variants use version-suffixed tags such as `v1.0.0-go1.21`, `latest-go1.21`, `v1.0.0-py3.11`, and `latest-py3.11`
 
 Notes:
 
