@@ -25,7 +25,7 @@ jobs:
       OCI_USERNAME: ${{ vars.OCI_USERNAME || secrets.OCI_USERNAME }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4

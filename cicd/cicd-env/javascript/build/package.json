@@ -2,9 +2,9 @@
   "name": "cicd-javascript-template",
   "private": true,
   "version": "1.0.0",
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@10.33.2",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "validate": "echo \"replace with your project validate script\"",

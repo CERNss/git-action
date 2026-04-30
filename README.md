@@ -86,8 +86,8 @@ When `TARGET_PLATFORMS` is not set, `publish-all.sh` defaults to `linux/amd64,li
 ## Preloaded tooling and templates
 
 - `python`: installs common CI tools and a baseline FastAPI test stack from `requirements.txt`, including `build`, `coverage`, `fastapi`, `httpx`, `pip-tools`, `pipenv`, `poetry`, `pytest==9.0.3`, `python-dotenv`, `requests`, `starlette`, `tox`, `twine`, `uvicorn`, and `virtualenv`
-- `javascript`: activates `yarn@1.22.22` and `pnpm@10.8.0` through `corepack`, installs `cnpm`, and carries a template `package.json` at `/opt/cicd/javascript/package.json`
-- `typescript`: activates `yarn@1.22.22` and `pnpm@10.8.0` through `corepack`, installs `cnpm`, `typescript`, `ts-node`, and `tsx`, and carries a template `package.json` at `/opt/cicd/typescript/package.json`
+- `javascript`: uses `node:24-alpine`, activates `yarn@1.22.22` and `pnpm@10.33.2` through `corepack`, installs `cnpm`, and carries a template `package.json` at `/opt/cicd/javascript/package.json`
+- `typescript`: uses `node:24-alpine`, activates `yarn@1.22.22` and `pnpm@10.33.2` through `corepack`, installs `cnpm`, `typescript`, `ts-node`, and `tsx`, and carries a template `package.json` at `/opt/cicd/typescript/package.json`
 - `golang`: carries a template `go.mod` at `/opt/cicd/golang/go.mod`
 
 Push to another OCI registry:
@@ -136,10 +136,10 @@ Platform behavior:
 
 Go and Python version behavior:
 
-- `golang` publishes `go1.21`, `go1.22`, and `go1.23` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/golang/versions.conf:1)
-- `python` publishes `py3.10`, `py3.11`, and `py3.12` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/python/versions.conf:1)
-- default variants also keep the plain tags, so `v1.0.0` and `latest` still point to Go `1.22` and Python `3.12`
-- non-default variants use version-suffixed tags such as `v1.0.0-go1.21`, `latest-go1.21`, `v1.0.0-py3.11`, and `latest-py3.11`
+- `golang` publishes `go1.25` and `go1.26` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/golang/versions.conf:1)
+- `python` publishes `py3.10`, `py3.11`, `py3.12`, `py3.13`, and `py3.14` variants from [versions.conf](/Users/cern/LocalDisk/D/Repo/infra/git-action/cicd/cicd-env/python/versions.conf:1)
+- default variants also keep the plain tags, so `v1.0.0` and `latest` point to Go `1.26` and Python `3.14`
+- non-default variants use version-suffixed tags such as `v1.0.0-go1.25`, `latest-go1.25`, `v1.0.0-py3.11`, and `latest-py3.11`
 
 Notes:
 

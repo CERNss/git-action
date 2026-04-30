@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=golang:1.22-alpine
+ARG BASE_IMAGE=golang:1.26-alpine
 FROM ${BASE_IMAGE}
 
 COPY go.mod /opt/cicd/golang/go.mod

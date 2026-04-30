@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=node:20-alpine
+ARG BASE_IMAGE=node:24-alpine
 FROM ${BASE_IMAGE}
 
 COPY package.json /opt/cicd/javascript/package.json
@@ -19,7 +19,7 @@ RUN apk add --no-cache \
     zip \
   && corepack enable \
   && corepack prepare yarn@1.22.22 --activate \
-  && corepack prepare pnpm@10.8.0 --activate \
+  && corepack prepare pnpm@10.33.2 --activate \
   && npm install --global cnpm \
   && update-ca-certificates
 
